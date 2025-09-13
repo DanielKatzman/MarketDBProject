@@ -1,0 +1,624 @@
+package shon_daniel.data_base;
+
+import shon_daniel.*;
+
+import java.sql.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+
+public class DBapi {
+    public static void format() {
+
+        Connection conn = null;
+        ResultSet rs = null;
+        Statement stmt = null;
+
+        try {
+            Class.forName("org.postgresql.Driver");
+            String dbUrl = "jdbc:postgresql://localhost:5432/college";
+            conn = DriverManager.getConnection(dbUrl, "postgres", "afeka");
+
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery("SELECT * FROM studenttable");
+
+            while (rs.next()) {
+                System.out.println(rs.getInt("studentid") + "- " + rs.getString("studentfirstname") + " " + rs.getString("studentlastname"));
+
+            }
+            conn.close();
+
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException sqlEx) {
+                    // Optional: log or handle the error
+                }
+                rs = null;
+            }
+
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException sqlEx) {
+                    // Optional: log or handle the error
+                }
+                stmt = null;
+            }
+        }
+    }
+//1.--------------------------------------------- addSeller ---------------------------------------
+    public static void addSeller(Seller seller){
+        Connection conn = null;
+        ResultSet rs = null;
+        Statement stmt = null;
+
+        String userName = seller.getUserAccount().getUserName();
+        String sellerPassword = seller.getUserAccount().getUserPassword();
+        int seller_id = seller.getUserAccount().getUserId();
+
+        try {
+            Class.forName("org.postgresql.Driver");
+            String dbUrl = "jdbc:postgresql://localhost:5432/testing";
+            conn = DriverManager.getConnection(dbUrl, "postgres", "afeka");
+
+            stmt = conn.createStatement();
+            stmt.executeUpdate("INSERT INTO users (user_id,username, userPass) VALUES ('" + seller_id + "','" + userName + "', '" + sellerPassword + "')");
+
+            // Now insert into seller using that user_id
+            stmt.executeUpdate("INSERT INTO seller (seller_id) VALUES (" + seller_id + ");");
+
+
+            conn.close();
+
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException sqlEx) {
+                    // Optional: log or handle the error
+                }
+                rs = null;
+            }
+
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException sqlEx) {
+                    // Optional: log or handle the error
+                }
+                stmt = null;
+            }
+        }
+    }
+
+
+    // 2.--------------------------------- addbuyer -----------------
+    public static boolean addBuyer(Buyer buyer){
+        Connection conn = null;
+        ResultSet rs = null;
+        Statement stmt = null;
+
+        String userName = buyer.getUserAccount().getUserName();
+        String buyerPassword = buyer.getUserAccount().getUserPassword();
+        int buyer_id = buyer.getUserAccount().getUserId();
+
+
+        String country = buyer.getUserAddress().getCountry();
+        String city = buyer.getUserAddress().getCity();
+        String streetName = buyer.getUserAddress().getStreetName();
+        int  buildingNumber = buyer.getUserAddress().getBuildingNumber();
+
+
+        try {
+            Class.forName("org.postgresql.Driver");
+            String dbUrl = "jdbc:postgresql://localhost:5432/testing";
+            conn = DriverManager.getConnection(dbUrl, "postgres", "afeka");
+
+            stmt = conn.createStatement();
+            stmt.executeUpdate("INSERT INTO users (user_id,username, userPass) VALUES ('" + buyer_id + "','" + userName + "', '" + buyerPassword + "')");
+
+            // Now insert into buyer using that user_id
+            stmt.executeUpdate(
+                    "INSERT INTO buyer (buyer_id, country, city, street, buildingnumber) VALUES (" +
+                            buyer_id + ", '" + country + "', '" + city + "', '" + streetName + "', " + buildingNumber + ");"
+            );
+
+            conn.close();
+
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException sqlEx) {
+                    // Optional: log or handle the error
+                }
+                rs = null;
+            }
+
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException sqlEx) {
+                    // Optional: log or handle the error
+                }
+                stmt = null;
+            }
+        }
+        return true;
+    }
+
+    //3. -------------------------------- add product to seller ----------------------------------
+    public static void addProductToSeller(Product product,Seller seller){
+        Connection conn = null;
+        ResultSet rs = null;
+        Statement stmt = null;
+
+        String prodName = product.getProductName();
+        int serialNum = product.getSerialNumber();
+        Double productPrice = product.getProductPrice();
+        Double packagePrice = product.getProductPrice();
+        int category = product.getCategory().ordinal();
+        int sellerId = seller.getUserAccount().getUserId();
+
+        try {
+            Class.forName("org.postgresql.Driver");
+            String dbUrl = "jdbc:postgresql://localhost:5432/testing";
+            conn = DriverManager.getConnection(dbUrl, "postgres", "afeka");
+
+            stmt = conn.createStatement();
+            stmt.executeUpdate(
+                    "INSERT INTO product (serialnum, productname, productcategory, seller_id, packagingprice, productprice) VALUES (" +
+                            serialNum + ", '" + prodName + "', " + category + ", " + sellerId + ", " + packagePrice + ", " + productPrice + ");"
+            );
+
+            conn.close();
+
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException sqlEx) {
+                    // Optional: log or handle the error
+                }
+                rs = null;
+            }
+
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException sqlEx) {
+                    // Optional: log or handle the error
+                }
+                stmt = null;
+            }
+        }
+    }
+
+
+    //5. -------------------------------- add shopping cart to history ----------------------------------
+    public static void createShoppingCart(ShoppingCart shoppingCart,Buyer buyer){
+
+        Connection conn = null;
+        ResultSet rs = null;
+        Statement stmt = null;
+
+        int shoppingCartId = shoppingCart.getIdShoppingCart();
+        int buyer_id = buyer.getUserAccount().getUserId();
+        String date = shoppingCart.getPurchaseDate().toString();
+
+        int prod_id;
+
+        try {
+            Class.forName("org.postgresql.Driver");
+            String dbUrl = "jdbc:postgresql://localhost:5432/testing";
+            conn = DriverManager.getConnection(dbUrl, "postgres", "afeka");
+
+            stmt = conn.createStatement();
+            stmt.executeUpdate(
+                    "INSERT INTO shoppinghistory (cart_id, b_id, date) VALUES (" + shoppingCartId + ", " + buyer_id + ", '" + date + "');"
+            );
+
+            Product[] products = shoppingCart.getCurrentProducts();
+
+            for (int i = 0; i < shoppingCart.getCurrentProductCounter(); i++) {
+                prod_id = products[i].getSerialNumber();
+
+                stmt.executeUpdate(
+                        "INSERT INTO shoppinghistory_products (product_id, fk_cart_id, fk_b_id) VALUES (" +
+                                prod_id + ", " + shoppingCartId + ", " + buyer_id + ");"
+                );
+            }
+
+            conn.close();
+
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException sqlEx) {
+                    // Optional: log or handle the error
+                }
+                rs = null;
+            }
+
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException sqlEx) {
+                    // Optional: log or handle the error
+                }
+                stmt = null;
+            }
+        }
+    }
+
+    //6. -------------------------------- return seller ----------------------------------
+    public List<Seller> getSellerFromDB()
+    {
+
+        Connection conn = null;
+        ResultSet rs = null;
+        Statement stmt = null;
+
+        Statement stmt_prod = null;
+        ResultSet rs_prod = null;
+
+        Seller seller_prod = null;
+
+        String prodName = null;
+        int serialNum = -1;
+        Double productPrice = null;
+        Double packagePrice = null;
+        int category = -1;
+        int sellerId = -1;
+
+        Product prod = null;
+
+        try {
+            Class.forName("org.postgresql.Driver");
+            String dbUrl = "jdbc:postgresql://localhost:5432/testing";
+            conn = DriverManager.getConnection(dbUrl, "postgres", "afeka");
+
+            stmt_prod = conn.createStatement(); // statement for product for each seller
+
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery(
+                    "SELECT * FROM seller JOIN users ON seller_id = user_id"
+            );
+
+            List<Seller> sellers = new ArrayList<Seller>();
+
+            while (rs.next()) {
+                int userId = rs.getInt("user_id");
+                String username = rs.getString("username");
+                String userpass = rs.getString("userpass");
+
+                UserAccount user = new UserAccount(username, userpass,userId);
+
+                seller_prod = new Seller(user);
+
+                rs_prod = stmt_prod.executeQuery("SELECT * FROM product WHERE seller_id = " + userId);
+
+                while (rs_prod.next()) {
+                    prodName = rs_prod.getString("productname");
+                    category = rs_prod.getInt("productcategory");
+                    productPrice = rs_prod.getDouble("productprice");
+                    packagePrice = rs_prod.getDouble("packagingprice");
+                    serialNum = rs_prod.getInt("serialnum");
+
+                    prod = new Product(prodName,productPrice,category,packagePrice,serialNum);
+
+                    seller_prod.addProductToSellerLoad(prod);
+                }
+
+                sellers.add(seller_prod);
+
+            }
+            conn.close();
+            return sellers;
+
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException sqlEx) {
+                    // Optional: log or handle the error
+                }
+                rs = null;
+            }
+
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException sqlEx) {
+                    // Optional: log or handle the error
+                }
+                stmt = null;
+            }
+        }
+
+        return null;
+    }
+
+    //7. -------------------------------- return buyer ----------------------------------
+    public List<Buyer> getBuyerFromDB()
+    {
+
+        Connection conn = null;
+        ResultSet rs = null;
+        Statement stmt = null;
+
+        try {
+            Class.forName("org.postgresql.Driver");
+            String dbUrl = "jdbc:postgresql://localhost:5432/testing";
+            conn = DriverManager.getConnection(dbUrl, "postgres", "afeka");
+
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery(
+                    "SELECT * FROM buyer JOIN users ON buyer_id = user_id"
+            );
+
+            List<Buyer> buyers = new ArrayList<Buyer>();
+            Buyer buyer = null;
+
+            while (rs.next()) {
+                int userId = rs.getInt("user_id");
+                String username = rs.getString("username");
+                String userpass = rs.getString("userpass");
+
+                String country = rs.getString("country");
+                String city =rs.getString("city");
+                String streetName = rs.getString("street");
+                int  buildingNumber = rs.getInt("buildingnumber");
+
+                UserAccount user = new UserAccount(username, userpass,userId);
+                UserAddress address = new UserAddress(country,city,streetName,buildingNumber);
+
+                buyer = new Buyer(user,address);
+                loadShoppingCart(buyer);
+
+
+                buyers.add(buyer);
+            }
+            conn.close();
+            return buyers;
+
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException sqlEx) {
+                    // Optional: log or handle the error
+                }
+                rs = null;
+            }
+
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException sqlEx) {
+                    // Optional: log or handle the error
+                }
+                stmt = null;
+            }
+        }
+
+        return null;
+    }
+
+    // ------------------- helper function to load shopping cart --------------------------
+    private void loadShoppingCart(Buyer buyer)
+    {
+        Connection conn = null;
+        ResultSet rs = null;
+        Statement stmt = null;
+
+        int shoppingCartId = -1;
+        String dateImport = null;
+
+        try {
+            Class.forName("org.postgresql.Driver");
+            String dbUrl = "jdbc:postgresql://localhost:5432/testing";
+            conn = DriverManager.getConnection(dbUrl, "postgres", "afeka");
+
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery("SELECT * FROM shoppinghistory WHERE b_id = " + buyer.getUserAccount().getUserId());
+
+            List<ShoppingCart> shoppingCarts = new ArrayList<>();
+            ShoppingCart shoppingCart = null;
+
+            while (rs.next()) {
+                shoppingCartId = rs.getInt("cart_id");
+                dateImport = rs.getString("date");
+
+                String dateString = dateImport; // your stored string
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                LocalDate date = LocalDate.parse(dateString, formatter);
+
+                shoppingCart = buyer.getCurrentShoppingCart();
+                shoppingCart.setDate(date);
+                shoppingCart.setIdShoppingCart(shoppingCartId);
+
+                loadProductFromDB(shoppingCart);
+
+                buyer.setCurrentShoppingCart();
+            }
+
+            conn.close();
+
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException sqlEx) {
+                    // Optional: log or handle the error
+                }
+                rs = null;
+            }
+
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException sqlEx) {
+                    // Optional: log or handle the error
+                }
+                stmt = null;
+            }
+        }
+    }
+
+    // ------------------ helper products function -----------------------
+    private void loadProductFromDB(ShoppingCart shoppingCart){
+        Connection conn = null;
+        ResultSet rs = null;
+        Statement stmt = null;
+
+        String prodName;
+        int serialNum;
+        Double productPrice;
+        Double packagePrice;
+        int category;
+
+        Product product = null;
+
+        try {
+            Class.forName("org.postgresql.Driver");
+            String dbUrl = "jdbc:postgresql://localhost:5432/testing";
+            conn = DriverManager.getConnection(dbUrl, "postgres", "afeka");
+
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery(
+                    "SELECT * FROM shoppinghistory_products JOIN shoppinghistory ON fk_cart_id = cart_id JOIN product ON serialnum = product_id\n" +
+                            "WHERE cart_id = " + shoppingCart.getIdShoppingCart()
+            );
+
+
+
+            while(rs.next()) {
+                prodName = rs.getString("productname");
+                serialNum = rs.getInt("serialnum");
+                productPrice = rs.getDouble("productprice");
+                packagePrice = rs.getDouble("packagingprice");
+                category = rs.getInt("productcategory");
+
+                product = new Product(prodName,productPrice,category,packagePrice,serialNum);
+
+                shoppingCart.addProductToShoppingCart(product);
+            }
+            conn.close();
+
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException sqlEx) {
+                    // Optional: log or handle the error
+                }
+                rs = null;
+            }
+
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException sqlEx) {
+                    // Optional: log or handle the error
+                }
+                stmt = null;
+            }
+        }
+    }
+
+    // ------------------ delete buyer -----------------------
+    public void deleteBuyer(Buyer buyer){
+        Connection conn = null;
+        ResultSet rs = null;
+        Statement stmt = null;
+
+        try {
+            Class.forName("org.postgresql.Driver");
+            String dbUrl = "jdbc:postgresql://localhost:5432/testing";
+            conn = DriverManager.getConnection(dbUrl, "postgres", "afeka");
+
+            stmt = conn.createStatement();
+            stmt.executeUpdate("DELETE FROM shoppinghistory_products\n" +
+                    "WHERE fk_b_id = " + buyer.getUserAccount().getUserId());
+
+            stmt.executeUpdate("DELETE FROM shoppinghistory\n" +
+                    "WHERE b_id = " + buyer.getUserAccount().getUserId());
+
+            stmt.executeUpdate("DELETE FROM buyer\n" +
+                    "WHERE buyer_id = " +  buyer.getUserAccount().getUserId());
+
+            stmt.executeUpdate("DELETE FROM users \n" +
+                    "WHERE user_id = + " +  buyer.getUserAccount().getUserId());
+
+            conn.close();
+
+
+
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException sqlEx) {
+                    // Optional: log or handle the error
+                }
+                rs = null;
+            }
+
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException sqlEx) {
+                    // Optional: log or handle the error
+                }
+                stmt = null;
+            }
+        }
+    }
+
+}
+
